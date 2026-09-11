@@ -1,0 +1,22 @@
+Year,Runs_per_game,BA,OBP,SLG,OPS,HR_per_team_game,SO_per_team_game,BB_per_team_game,ERA,WHIP,SO9,Statcast_Era,Pitch_Tracking_Era,Statcast_Technology_Metrics,Avg_Exit_Velocity_mph,Hard_Hit_pct
+2005,4.59,0.264,0.33,0.419,0.749,1.03,6.3,3.13,4.28,1.369,6.4,0,0,Not available in this compiled sheet,,
+2006,4.86,0.269,0.337,0.432,0.768,1.11,6.52,3.26,4.52,1.408,6.6,0,0,Not available in this compiled sheet,,
+2007,4.8,0.268,0.336,0.423,0.758,1.02,6.62,3.31,4.64,1.39,6.6,0,0,Not available in this compiled sheet,,
+2008,4.65,0.264,0.333,0.416,0.749,1.0,6.77,3.36,4.32,1.39,6.8,0,1,Not available in this compiled sheet,,
+2009,4.61,0.262,0.333,0.418,0.751,1.04,6.91,3.42,4.32,1.39,7.0,0,1,Not available in this compiled sheet,,
+2010,4.38,0.257,0.325,0.403,0.728,0.95,7.06,3.25,4.09,1.39,7.1,0,1,Not available in this compiled sheet,,
+2011,4.28,0.255,0.321,0.399,0.72,0.94,7.1,3.09,4.28,1.37,7.1,0,1,Not available in this compiled sheet,,
+2012,4.32,0.255,0.319,0.405,0.724,1.02,7.5,3.03,4.01,1.34,7.6,0,1,Not available in this compiled sheet,,
+2013,4.17,0.253,0.318,0.396,0.714,0.96,7.55,3.01,3.86,1.34,7.6,0,1,Not available in this compiled sheet,,
+2014,4.07,0.251,0.314,0.386,0.7,0.86,7.7,2.88,3.74,1.3,7.7,0,1,Not available in this compiled sheet,,
+2015,4.25,0.254,0.317,0.405,0.721,1.01,7.71,2.9,3.76,1.3,7.6,1,1,Not available in this compiled sheet,88.2,33.9
+2016,4.48,0.255,0.322,0.417,0.739,1.16,8.03,3.11,4.19,1.325,8.0,1,1,Not available in this compiled sheet,,
+2017,4.65,0.255,0.324,0.426,0.75,1.26,8.25,3.26,4.36,1.342,8.3,1,1,Not available in this compiled sheet,,
+2018,4.45,0.248,0.318,0.409,0.728,1.15,8.48,3.23,4.15,1.304,8.5,1,1,Not available in this compiled sheet,,
+2019,4.83,0.252,0.323,0.435,0.758,1.39,8.81,3.27,4.51,1.334,8.9,1,1,Not available in this compiled sheet,,
+2020,4.65,0.245,0.322,0.418,0.74,1.28,8.68,3.39,4.63,1.32,9.1,1,1,Not available in this compiled sheet,88.4,37.6
+2021,4.53,0.244,0.317,0.411,0.728,1.22,8.68,3.25,4.26,1.297,8.9,1,1,Not available in this compiled sheet,,
+2022,4.28,0.243,0.312,0.395,0.706,1.07,8.4,3.06,3.96,1.266,8.5,1,1,Not available in this compiled sheet,,
+2023,4.62,0.248,0.32,0.414,0.734,1.21,8.61,3.25,4.33,1.315,8.7,1,1,Not available in this compiled sheet,,
+2024,4.39,0.243,0.312,0.399,0.711,1.12,8.48,3.07,4.07,1.27,8.6,1,1,Not available in this compiled sheet,88.8,38.9
+2025,4.45,0.245,0.315,0.404,0.719,1.16,8.36,3.16,4.15,1.289,8.5,1,1,Not available in this compiled sheet,89.4,40.9

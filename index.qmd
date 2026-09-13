@@ -8,257 +8,122 @@ execute:
 ```{r}
 #| message: false
 library(tidyverse)
-library(plotly)
+# Statcast & pre-Statcast Hard-Hit Rate data (player-seasons)
+hitters_hard_hit <- read_csv("data/all_hitters_hard_hit.csv")
 
-baseball_leagues <- read_csv("data/baseball_leagues.csv")
+yearly_avg_hh <- hitters_hard_hit |>
+  group_by(year, era) |>
+  summarize(avg_hard_hit = mean(hard_hit_pct, na.rm = TRUE), .groups = "drop")
 
-# Create cumulative data so lines draw forward across years as animation plays
-create_anim_df <- \(df) {
-  map_dfr(unique(df$Year), \(yr) {
-    df |>
-      filter(Year <= yr) |>
-      mutate(Frame = yr)
-  })
-}
+# Pitcher seasons data (K/9)
+pitcher_seasons <- read_csv("data/pitcher_seasons.csv")
 
-# Helper to generate spaghetti lines from 1,000 posterior simulation draws
-create_spaghetti_df <- \(df, metric, n_sims = 1000, n_draws = 50) {
-  fit <- lm(reformulate("Year", response = metric), data = df)
-  set.seed(42)
-  coefs <- MASS::mvrnorm(n_sims, mu = coef(fit), Sigma = vcov(fit))
-  years <- seq(2005, 2025, by = 1)
-  
-  map_dfr(seq_len(n_draws), \(i) {
-    tibble(
-      draw = i,
-      Year = years,
-      val = coefs[i, 1] + coefs[i, 2] * years
-    )
-  }) |>
-    group_by(draw) |>
-    group_modify(\(data, keys) add_row(data, Year = NA, val = NA)) |>
-    ungroup()
-}
-
-al_data <- baseball_leagues |> filter(League == "American League")
-nl_data <- baseball_leagues |> filter(League == "National League")
-
-anim_all <- create_anim_df(baseball_leagues)
-anim_al  <- create_anim_df(al_data)
-anim_nl  <- create_anim_df(nl_data)
-
-# Spaghetti draws for SO/9
-spag_al_so9 <- create_spaghetti_df(al_data, "SO9")
-spag_nl_so9 <- create_spaghetti_df(nl_data, "SO9")
-
-# Statcast Hard-Hit Rate data and simulation draws
-hard_hit_obs <- read_csv("data/baseball.csv") |>
-  filter(!is.na(Hard_Hit_pct)) |>
-  select(Year, Hard_Hit_pct)
-
-fit_hh <- lm(Hard_Hit_pct ~ Year, data = hard_hit_obs)
-
-set.seed(42)
-coefs_hh <- MASS::mvrnorm(1000, mu = coef(fit_hh), Sigma = vcov(fit_hh))
-years_hh <- seq(2005, 2025, by = 1)
-
-spag_hard_hit <- map_dfr(1:100, \(i) {
-  tibble(
-    draw = i,
-    Year = years_hh,
-    Hard_Hit_pct = coefs_hh[i, 1] + coefs_hh[i, 2] * years_hh
-  )
-})
-
-league_colors <- c(
-  "American League" = "#1f77b4",
-  "National League" = "#d62728",
-  "MLB Average"     = "#7f7f7f"
-)
-
-# Marker for the start of the Statcast era (2015)
-statcast_shape <- list(
-  type = "line",
-  x0 = 2015,
-  x1 = 2015,
-  y0 = 0,
-  y1 = 1,
-  yref = "paper",
-  line = list(color = "darkred", dash = "dash", width = 1.5)
-)
-
-statcast_annotation <- list(
-  x = 2015.2,
-  y = 0.95,
-  yref = "paper",
-  text = "2015: Statcast Era Begins",
-  showarrow = FALSE,
-  xanchor = "left",
-  font = list(color = "darkred", size = 11)
-)
+yearly_pitching <- pitcher_seasons |>
+  group_by(yearID, era) |>
+  summarize(avg_so9 = mean(so9), .groups = "drop")
 ```
 
-## Strikeout Rise Over Time
+## Strikeout Rates Over Time
 
-Press **Play** or scrub the slider to animate strikeout rates from 2005 to 2025. Background spaghetti lines display sample trajectories from 1,000 posterior simulation draws to visualize model uncertainty. Switch tabs to compare leagues.
-
-::: {.panel-tabset}
-### Both Leagues
+Each point represents an individual pitcher-season (minimum 30 IP), displaying real pitcher-level variation across thousands of observations. The solid line and points trace the annual league average K/9 across the pre-Statcast and post-Statcast eras.
 
 ```{r}
-#| label: plot-so9-both
-plot_ly() |>
-  add_trace(
-    data = spag_al_so9,
-    x = ~Year,
-    y = ~val,
-    type = "scatter",
-    mode = "lines",
-    line = list(color = "rgba(31, 119, 180, 0.18)", width = 1),
-    hoverinfo = "none",
-    showlegend = FALSE
-  ) |>
-  add_trace(
-    data = spag_nl_so9,
-    x = ~Year,
-    y = ~val,
-    type = "scatter",
-    mode = "lines",
-    line = list(color = "rgba(214, 39, 40, 0.18)", width = 1),
-    hoverinfo = "none",
-    showlegend = FALSE
-  ) |>
-  add_trace(
-    data = anim_all,
-    x = ~Year,
-    y = ~SO9,
-    color = ~League,
-    colors = league_colors,
-    frame = ~Frame,
-    type = "scatter",
-    mode = "lines+markers"
-  ) |>
-  layout(
-    xaxis = list(range = c(2004, 2026), title = "Year"),
-    yaxis = list(range = c(5.5, 9.5), title = "Strikeouts per 9 Innings (SO/9)"),
-    shapes = list(statcast_shape),
-    annotations = list(statcast_annotation)
-  ) |>
-  animation_opts(frame = 400, transition = 200, redraw = FALSE)
-```
-
-### American League
-
-```{r}
-#| label: plot-so9-al
-plot_ly() |>
-  add_trace(
-    data = spag_al_so9,
-    x = ~Year,
-    y = ~val,
-    type = "scatter",
-    mode = "lines",
-    line = list(color = "rgba(31, 119, 180, 0.22)", width = 1),
-    hoverinfo = "none",
-    showlegend = FALSE
-  ) |>
-  add_trace(
-    data = anim_al,
-    x = ~Year,
-    y = ~SO9,
-    color = ~League,
-    colors = league_colors,
-    frame = ~Frame,
-    type = "scatter",
-    mode = "lines+markers"
-  ) |>
-  layout(
-    xaxis = list(range = c(2004, 2026), title = "Year"),
-    yaxis = list(range = c(5.5, 9.5), title = "Strikeouts per 9 Innings (SO/9)"),
-    shapes = list(statcast_shape),
-    annotations = list(statcast_annotation)
-  ) |>
-  animation_opts(frame = 400, transition = 200, redraw = FALSE)
-```
-
-### National League
-
-```{r}
-#| label: plot-so9-nl
-plot_ly() |>
-  add_trace(
-    data = spag_nl_so9,
-    x = ~Year,
-    y = ~val,
-    type = "scatter",
-    mode = "lines",
-    line = list(color = "rgba(214, 39, 40, 0.22)", width = 1),
-    hoverinfo = "none",
-    showlegend = FALSE
-  ) |>
-  add_trace(
-    data = anim_nl,
-    x = ~Year,
-    y = ~SO9,
-    color = ~League,
-    colors = league_colors,
-    frame = ~Frame,
-    type = "scatter",
-    mode = "lines+markers"
-  ) |>
-  layout(
-    xaxis = list(range = c(2004, 2026), title = "Year"),
-    yaxis = list(range = c(5.5, 9.5), title = "Strikeouts per 9 Innings (SO/9)"),
-    shapes = list(statcast_shape),
-    annotations = list(statcast_annotation)
-  ) |>
-  animation_opts(frame = 400, transition = 200, redraw = FALSE)
-```
-:::
-
-## Hard Hit Rate Over Time
-
-To examine the progression across both the pre-tracking and Statcast eras, we model hard-hit rates from 2005 to 2025 using 1,000 posterior simulation draws.
-
-The **spaghetti plot** below displays 100 sample trajectories (the thin, translucent lines) from 2005 to 2025, highlighting the shift at 2015 when Statcast tracking was officially introduced alongside observed data points (red).
-
-```{r}
-#| label: plot-hard-hit-spaghetti
+#| label: plot-k9-pitcher-seasons
 ggplot() +
-  geom_line(
-    data = spag_hard_hit,
-    aes(x = Year, y = Hard_Hit_pct, group = draw),
-    alpha = 0.15,
-    color = "steelblue"
+  geom_jitter(
+    data = pitcher_seasons,
+    aes(x = yearID, y = so9, color = era),
+    alpha = 0.12,
+    width = 0.25,
+    size = 1
   ) +
   geom_line(
-    data = tibble(Year = years_hh, Hard_Hit_pct = coef(fit_hh)[1] + coef(fit_hh)[2] * years_hh),
-    aes(x = Year, y = Hard_Hit_pct),
-    color = "darkblue",
+    data = yearly_pitching,
+    aes(x = yearID, y = avg_so9),
+    color = "black",
     linewidth = 1.2
   ) +
   geom_point(
-    data = hard_hit_obs,
-    aes(x = Year, y = Hard_Hit_pct),
-    color = "darkred",
-    size = 3.5
+    data = yearly_pitching,
+    aes(x = yearID, y = avg_so9, fill = era),
+    shape = 21,
+    size = 3,
+    color = "black"
   ) +
-  geom_vline(xintercept = 2015, linetype = "dashed", color = "darkred") +
+  geom_vline(xintercept = 2014.5, linetype = "dashed", color = "darkred", linewidth = 1) +
   annotate(
     "text",
-    x = 2015.3,
-    y = 28,
-    label = "2015: Statcast Era Begins",
+    x = 2014.8,
+    y = 16,
+    label = "Statcast Era Begins (2015)",
     color = "darkred",
-    hjust = 0
+    hjust = 0,
+    size = 3.5
   ) +
   scale_x_continuous(breaks = seq(2005, 2025, by = 5)) +
+  scale_color_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
+  scale_fill_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
   labs(
-    title = "Hard Hit Rate Over Time (2005–2025)",
-    subtitle = "Spaghetti plot of 100 sample lines from 1,000 posterior simulation draws",
+    title = "Strikeouts per 9 Innings (K/9) by Pitcher-Season (2005–2025)",
+    subtitle = "Comparing individual pitcher-seasons (points) and annual averages (line) across eras",
     x = "Year",
-    y = "Hard Hit %",
-    caption = "Red points are observed Statcast measurements. Translucent lines display sample trajectories."
+    y = "Average K/9",
+    color = "Era",
+    fill = "Era",
+    caption = "Source: Lahman Baseball Database (min. 30 IP). Line indicates annual league average."
+  ) +
+  theme_minimal()
+```
+
+## Hard Hit Rate Over Time
+
+Each point represents a qualifying hitter's individual hard-hit rate for that season, showing real individual-level variation across 4,251 player-seasons. The solid line and points trace the annual league average across the pre-Statcast era (BIS video-scouted Hard%) and the Statcast era (radar-measured exit velocity ≥ 95 mph).
+
+```{r}
+#| label: plot-hard-hit-player-seasons
+ggplot() +
+  geom_jitter(
+    data = hitters_hard_hit,
+    aes(x = year, y = hard_hit_pct, color = era),
+    alpha = 0.15,
+    width = 0.25,
+    size = 1
+  ) +
+  geom_line(
+    data = yearly_avg_hh,
+    aes(x = year, y = avg_hard_hit, group = era),
+    color = "black",
+    linewidth = 1.2
+  ) +
+  geom_point(
+    data = yearly_avg_hh,
+    aes(x = year, y = avg_hard_hit, fill = era),
+    shape = 21,
+    size = 3,
+    color = "black"
+  ) +
+  geom_vline(xintercept = 2014.5, linetype = "dashed", color = "darkred", linewidth = 1) +
+  annotate(
+    "text",
+    x = 2014.8,
+    y = 65,
+    label = "Statcast Era Begins (2015)",
+    color = "darkred",
+    hjust = 0,
+    size = 3.5
+  ) +
+  scale_x_continuous(breaks = seq(2005, 2025, by = 5)) +
+  scale_y_continuous(labels = \(x) paste0(x, "%")) +
+  scale_color_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
+  scale_fill_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
+  labs(
+    title = "Hard-Hit Rate by Player-Season (2005–2025)",
+    subtitle = "Comparing pre-Statcast (BIS scouted) vs. Statcast era (radar-measured ≥ 95 mph)",
+    x = "Year",
+    y = "Average Hard-Hit %",
+    color = "Era",
+    fill = "Era",
+    caption = "Sources: FanGraphs / BIS (2005–2014) and Baseball Savant Statcast (2015–2025). Line indicates annual league average."
   ) +
   theme_minimal()
 ```

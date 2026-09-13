@@ -11,20 +11,20 @@
     "href": "index.html",
     "title": "Baseball Analysis",
     "section": "",
-    "text": "Press Play or scrub the slider to animate strikeout rates from 2005 to 2025. Background spaghetti lines display sample trajectories from 1,000 posterior simulation draws to visualize model uncertainty. Switch tabs to compare leagues.\n\nBoth LeaguesAmerican LeagueNational League"
+    "text": "Each point represents an individual pitcher-season (minimum 30 IP), displaying real pitcher-level variation across thousands of observations. The solid line and points trace the annual league average K/9 across the pre-Statcast and post-Statcast eras."
   },
   {
-    "objectID": "index.html#strikeout-rise-over-time",
-    "href": "index.html#strikeout-rise-over-time",
+    "objectID": "index.html#strikeout-rates-over-time",
+    "href": "index.html#strikeout-rates-over-time",
     "title": "Baseball Analysis",
     "section": "",
-    "text": "Press Play or scrub the slider to animate strikeout rates from 2005 to 2025. Background spaghetti lines display sample trajectories from 1,000 posterior simulation draws to visualize model uncertainty. Switch tabs to compare leagues.\n\nBoth LeaguesAmerican LeagueNational League"
+    "text": "Each point represents an individual pitcher-season (minimum 30 IP), displaying real pitcher-level variation across thousands of observations. The solid line and points trace the annual league average K/9 across the pre-Statcast and post-Statcast eras."
   },
   {
     "objectID": "index.html#hard-hit-rate-over-time",
     "href": "index.html#hard-hit-rate-over-time",
     "title": "Baseball Analysis",
     "section": "Hard Hit Rate Over Time",
-    "text": "Hard Hit Rate Over Time\nTo examine the progression across both the pre-tracking and Statcast eras, we model hard-hit rates from 2005 to 2025 using 1,000 posterior simulation draws.\nThe spaghetti plot below displays 100 sample trajectories (the thin, translucent lines) from 2005 to 2025, highlighting the shift at 2015 when Statcast tracking was officially introduced alongside observed data points (red)."
+    "text": "Hard Hit Rate Over Time\nEach point represents a qualifying hitter’s individual hard-hit rate for that season, showing real individual-level variation across 4,251 player-seasons. The solid line and points trace the annual league average across the pre-Statcast era (BIS video-scouted Hard%) and the Statcast era (radar-measured exit velocity ≥ 95 mph)."
   }
 ]

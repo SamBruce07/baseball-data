@@ -8,6 +8,7 @@ execute:
 ```{r}
 #| message: false
 library(tidyverse)
+library(plotly)
 # Statcast & pre-Statcast Hard-Hit Rate data (player-seasons)
 hitters_hard_hit <- read_csv("data/all_hitters_hard_hit.csv")
 
@@ -16,12 +17,20 @@ yearly_avg_hh <- hitters_hard_hit |>
   summarize(avg_hard_hit = mean(hard_hit_pct, na.rm = TRUE), .groups = "drop")
 
 # Pitcher seasons data (K/9)
-pitcher_seasons <- read_csv("data/pitcher_seasons.csv")
+pitcher_seasons <- read_csv("data/pitcher_seasons.csv") |>
+  left_join(
+    Lahman::People |> select(playerID, nameFirst, nameLast) |> mutate(name = paste(nameFirst, nameLast)),
+    by = "playerID"
+  )
 
 yearly_pitching <- pitcher_seasons |>
   group_by(yearID, era) |>
   summarize(avg_so9 = mean(so9), .groups = "drop")
 ```
+
+The introduction of Major League Baseball's Statcast system in 2015 revolutionized how the sport is measured and played. By deploying high-resolution cameras and radar across every ballpark, Statcast enabled the tracking of granular metrics like exit velocity, launch angle, and pitch spin rates on every play.
+
+This project examines how key baseball statistics evolved alongside this technological shift. By comparing trends across the pre-Statcast era (2005–2014) and post-Statcast era (2015–2025), we analyze whether the availability of tracking data coincided with noticeable changes in pitching strikeout rates (K/9) and hitter hard-hit percentages.
 
 ## Strikeout Rates Over Time
 
@@ -29,13 +38,18 @@ Each point represents an individual pitcher-season (minimum 30 IP), displaying r
 
 ```{r}
 #| label: plot-k9-pitcher-seasons
-ggplot() +
+p_k9 <- ggplot() +
   geom_jitter(
     data = pitcher_seasons,
-    aes(x = yearID, y = so9, color = era),
-    alpha = 0.12,
+    aes(
+      x = yearID,
+      y = so9,
+      color = era,
+      text = paste0(name, " (", yearID, ")<br>K/9: ", round(so9, 2))
+    ),
+    alpha = 0.15,
     width = 0.25,
-    size = 1
+    size = 1.2
   ) +
   geom_line(
     data = yearly_pitching,
@@ -45,7 +59,12 @@ ggplot() +
   ) +
   geom_point(
     data = yearly_pitching,
-    aes(x = yearID, y = avg_so9, fill = era),
+    aes(
+      x = yearID,
+      y = avg_so9,
+      fill = era,
+      text = paste0(yearID, " League Avg K/9: ", round(avg_so9, 2))
+    ),
     shape = 21,
     size = 3,
     color = "black"
@@ -65,15 +84,17 @@ ggplot() +
   scale_fill_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
   labs(
     title = "Strikeouts per 9 Innings (K/9) by Pitcher-Season (2005–2025)",
-    subtitle = "Comparing individual pitcher-seasons (points) and annual averages (line) across eras",
     x = "Year",
     y = "Average K/9",
     color = "Era",
-    fill = "Era",
-    caption = "Source: Lahman Baseball Database (min. 30 IP). Line indicates annual league average."
+    fill = "Era"
   ) +
   theme_minimal()
+
+ggplotly(p_k9, tooltip = "text", height = 420)
 ```
+
+Between the pre-Statcast era (2005–2014) and the post-Statcast era (2015–2025), average pitcher strikeout rates increased from **7.21** to **8.63 K/9**, representing a **19.7% increase** across eras (and a **31.5% increase** from 6.55 in 2005 to 8.61 in 2025).
 
 ## Hard Hit Rate Over Time
 
@@ -81,13 +102,18 @@ Each point represents a qualifying hitter's individual hard-hit rate for that se
 
 ```{r}
 #| label: plot-hard-hit-player-seasons
-ggplot() +
+p_hard_hit <- ggplot() +
   geom_jitter(
     data = hitters_hard_hit,
-    aes(x = year, y = hard_hit_pct, color = era),
-    alpha = 0.15,
+    aes(
+      x = year,
+      y = hard_hit_pct,
+      color = era,
+      text = paste0(name, " (", year, ")<br>Hard-Hit %: ", hard_hit_pct, "%")
+    ),
+    alpha = 0.2,
     width = 0.25,
-    size = 1
+    size = 1.2
   ) +
   geom_line(
     data = yearly_avg_hh,
@@ -97,7 +123,12 @@ ggplot() +
   ) +
   geom_point(
     data = yearly_avg_hh,
-    aes(x = year, y = avg_hard_hit, fill = era),
+    aes(
+      x = year,
+      y = avg_hard_hit,
+      fill = era,
+      text = paste0(year, " League Average: ", round(avg_hard_hit, 1), "%")
+    ),
     shape = 21,
     size = 3,
     color = "black"
@@ -118,12 +149,15 @@ ggplot() +
   scale_fill_manual(values = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c")) +
   labs(
     title = "Hard-Hit Rate by Player-Season (2005–2025)",
-    subtitle = "Comparing pre-Statcast (BIS scouted) vs. Statcast era (radar-measured ≥ 95 mph)",
     x = "Year",
     y = "Average Hard-Hit %",
     color = "Era",
-    fill = "Era",
-    caption = "Sources: FanGraphs / BIS (2005–2014) and Baseball Savant Statcast (2015–2025). Line indicates annual league average."
+    fill = "Era"
   ) +
   theme_minimal()
+
+ggplotly(p_hard_hit, tooltip = "text", height = 420)
 ```
+
+Average hard-hit rates rose from **30.5%** in the pre-Statcast era to **38.5%** in the Statcast era—a **26.2% relative increase** (an 8.0 percentage-point gain, climbing to 42.1% by 2025). Note that part of this shift coincides with the change in data measurement (scout observation vs. automated radar tracking).
+

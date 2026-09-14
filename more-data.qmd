@@ -1,0 +1,253 @@
+---
+title: "Interactive Comparison: Strikeouts vs. Hard-Hit Rate"
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(plotly)
+
+# Load player-season datasets
+hitters_hard_hit <- read_csv("data/all_hitters_hard_hit.csv")
+pitcher_seasons <- read_csv("data/pitcher_seasons.csv") |>
+  left_join(
+    Lahman::People |> select(playerID, nameFirst, nameLast) |> mutate(name = paste(nameFirst, nameLast)),
+    by = "playerID"
+  )
+
+# Add horizontal jitter for individual points so they don't overlap completely
+set.seed(42)
+hitters_jittered <- hitters_hard_hit |>
+  mutate(year_jitter = year + runif(n(), -0.25, 0.25))
+
+pitchers_jittered <- pitcher_seasons |>
+  mutate(year_jitter = yearID + runif(n(), -0.25, 0.25))
+
+# Calculate annual league averages
+yearly_hh <- hitters_hard_hit |>
+  group_by(year) |>
+  summarize(avg_hard_hit = round(mean(hard_hit_pct, na.rm = TRUE), 1))
+
+yearly_k9 <- pitcher_seasons |>
+  group_by(yearID) |>
+  summarize(avg_so9 = round(mean(so9), 2))
+```
+
+## Interactive Era Comparison (2005–2025)
+
+Use the filter buttons at the top to toggle between individual player points and clean league-average trends.
+
+```{r}
+#| label: plot-interactive-comparison
+plot_ly(height = 480) |>
+  # Hitter player-seasons (left axis)
+  add_markers(
+    data = hitters_jittered,
+    x = ~year_jitter,
+    y = ~hard_hit_pct,
+    name = "Hitter Seasons",
+    marker = list(color = "#e41a1c", opacity = 0.2, size = 3.5),
+    text = ~paste0("<b>", name, "</b> (", year, ")<br>Hard-Hit Rate: ", hard_hit_pct, "%"),
+    hoverinfo = "text"
+  ) |>
+  # Pitcher player-seasons (right axis)
+  add_markers(
+    data = pitchers_jittered,
+    x = ~year_jitter,
+    y = ~so9,
+    yaxis = "y2",
+    name = "Pitcher Seasons",
+    marker = list(color = "#377eb8", opacity = 0.2, size = 3.5),
+    text = ~paste0("<b>", name, "</b> (", yearID, ")<br>K/9: ", round(so9, 2)),
+    hoverinfo = "text"
+  ) |>
+  # Annual league average lines
+  add_lines(
+    data = yearly_hh,
+    x = ~year,
+    y = ~avg_hard_hit,
+    name = "Avg Hard-Hit %",
+    line = list(color = "#b30000", width = 3),
+    text = ~paste0("<b>", year, " League Avg</b><br>Hard-Hit Rate: ", avg_hard_hit, "%"),
+    hoverinfo = "text"
+  ) |>
+  add_lines(
+    data = yearly_k9,
+    x = ~yearID,
+    y = ~avg_so9,
+    yaxis = "y2",
+    name = "Avg K/9",
+    line = list(color = "#08519c", width = 3),
+    text = ~paste0("<b>", yearID, " League Avg</b><br>K/9: ", avg_so9),
+    hoverinfo = "text"
+  ) |>
+  layout(
+    title = list(
+      text = "<b>Player-Season Hard-Hit Rate vs. Strikeout Rate</b> (2005–2025)",
+      x = 0.5,
+      xanchor = "center",
+      y = 0.98,
+      font = list(size = 15)
+    ),
+    margin = list(t = 80, b = 60, l = 60, r = 60),
+    xaxis = list(title = "Year", dtick = 5, gridcolor = "#f0f0f0"),
+    yaxis = list(
+      title = list(text = "Hard-Hit Rate (%)", font = list(color = "#b30000", size = 12)),
+      ticksuffix = "%",
+      gridcolor = "#f0f0f0"
+    ),
+    yaxis2 = list(
+      title = list(text = "Strikeouts per 9 Innings (K/9)", font = list(color = "#08519c", size = 12)),
+      overlaying = "y",
+      side = "right",
+      showgrid = FALSE
+    ),
+    hoverlabel = list(bgcolor = "#2c3e50", font = list(color = "white")),
+    # Interactive view switcher buttons
+    updatemenus = list(
+      list(
+        type = "buttons",
+        direction = "right",
+        x = 0.5,
+        xanchor = "center",
+        y = 1.10,
+        buttons = list(
+          list(method = "restyle", args = list("visible", list(TRUE, TRUE, TRUE, TRUE)), label = "Show All"),
+          list(method = "restyle", args = list("visible", list(FALSE, FALSE, TRUE, TRUE)), label = "Averages Only"),
+          list(method = "restyle", args = list("visible", list(TRUE, FALSE, TRUE, FALSE)), label = "Hitters Only"),
+          list(method = "restyle", args = list("visible", list(FALSE, TRUE, FALSE, TRUE)), label = "Pitchers Only")
+        )
+      )
+    ),
+    # Shaded backgrounds for pre-Statcast and post-Statcast eras
+    shapes = list(
+      list(
+        type = "rect",
+        x0 = 2004.5,
+        x1 = 2014.5,
+        y0 = 0,
+        y1 = 1,
+        yref = "paper",
+        fillcolor = "rgba(55, 126, 184, 0.06)",
+        line = list(width = 0),
+        layer = "below"
+      ),
+      list(
+        type = "rect",
+        x0 = 2014.5,
+        x1 = 2025.5,
+        y0 = 0,
+        y1 = 1,
+        yref = "paper",
+        fillcolor = "rgba(228, 26, 28, 0.06)",
+        line = list(width = 0),
+        layer = "below"
+      ),
+      list(
+        type = "line",
+        x0 = 2014.5,
+        x1 = 2014.5,
+        y0 = 0,
+        y1 = 1,
+        yref = "paper",
+        line = list(dash = "dash", color = "#777777", width = 1.5)
+      )
+    ),
+    annotations = list(
+      list(
+        x = 2009.5,
+        y = 0.98,
+        yref = "paper",
+        text = "<b>Pre-Statcast Era</b>",
+        showarrow = FALSE,
+        font = list(color = "#377eb8", size = 12)
+      ),
+      list(
+        x = 2020,
+        y = 0.98,
+        yref = "paper",
+        text = "<b>Statcast Era (2015+)</b>",
+        showarrow = FALSE,
+        font = list(color = "#e41a1c", size = 12)
+      )
+    ),
+    legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.16)
+  ) |>
+  config(responsive = TRUE)
+```
+
+By displaying both sets of player-seasons together, we can observe how the entire distribution of player performances shifted upward along with the introduction of Statcast in 2015.
+
+## Game Evolution: Strikeout vs. Hard-Hit Trajectory
+
+Instead of tracking both metrics on a shared timeline, this **connected scatter plot (trajectory plot)** graphs them directly against each other. Tracing the path chronologically from 2005 (bottom left) to 2025 (top right) visualizes how Major League Baseball migrated diagonally upward—moving toward higher strikeout rates and higher exit velocities at the same time.
+
+```{r}
+#| label: plot-game-trajectory
+combined_trajectory <- inner_join(yearly_hh, yearly_k9, by = c("year" = "yearID")) |>
+  mutate(era = if_else(year < 2015, "Pre-Statcast (2005–2014)", "Post-Statcast (2015–2025)"))
+
+plot_ly(data = combined_trajectory, x = ~avg_so9, y = ~avg_hard_hit, height = 420) |>
+  # Chronological path connecting seasons
+  add_paths(
+    line = list(color = "#888888", width = 2, dash = "solid"),
+    showlegend = FALSE,
+    hoverinfo = "none"
+  ) |>
+  # Season marker points colored by era
+  add_markers(
+    color = ~era,
+    colors = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c"),
+    marker = list(size = 9, line = list(color = "black", width = 1)),
+    text = ~paste0("<b>Season: ", year, "</b><br>Era: ", era, "<br>Strikeouts per 9: ", avg_so9, "<br>Hard-Hit Rate: ", avg_hard_hit, "%"),
+    hoverinfo = "text"
+  ) |>
+  # Year labels for key seasons
+  add_text(
+    text = ~year,
+    textposition = "top center",
+    showlegend = FALSE,
+    textfont = list(size = 9, color = "#333333")
+  ) |>
+  layout(
+    title = list(
+      text = "<b>The Shift in Modern Baseball (2005–2025)</b><br><sup>League Average K/9 vs. Hard-Hit Rate Trajectory</sup>",
+      x = 0.5,
+      xanchor = "center",
+      font = list(size = 15)
+    ),
+    margin = list(t = 70, b = 60, l = 60, r = 50),
+    xaxis = list(
+      title = "League Average Strikeouts per 9 Innings (K/9)",
+      dtick = 0.5,
+      gridcolor = "#f0f0f0"
+    ),
+    yaxis = list(
+      title = "League Average Hard-Hit Rate (%)",
+      ticksuffix = "%",
+      gridcolor = "#f0f0f0"
+    ),
+    annotations = list(
+      list(
+        x = 6.55, y = 30.2,
+        text = "<b>2005 (Start)</b>",
+        showarrow = TRUE,
+        arrowhead = 2,
+        ax = -45, ay = 25
+      ),
+      list(
+        x = 8.61, y = 42.1,
+        text = "<b>2025 (Latest)</b>",
+        showarrow = TRUE,
+        arrowhead = 2,
+        ax = 45, ay = -25
+      )
+    ),
+    legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.18)
+  ) |>
+  config(responsive = TRUE)
+```
+

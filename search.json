@@ -47,5 +47,12 @@
     "title": "Interactive Comparison: Strikeouts vs. Hard-Hit Rate",
     "section": "Game Evolution: Strikeout vs. Hard-Hit Trajectory",
     "text": "Game Evolution: Strikeout vs. Hard-Hit Trajectory\nInstead of tracking both metrics on a shared timeline, this connected scatter plot (trajectory plot) graphs them directly against each other. Tracing the path chronologically from 2005 (bottom left) to 2025 (top right) visualizes how Major League Baseball migrated diagonally upward—moving toward higher strikeout rates and higher exit velocities at the same time."
+  },
+  {
+    "objectID": "more-data.html#strike-zone-whiff-rate-mike-trout-pre--vs.-post-statcast-mvp",
+    "href": "more-data.html#strike-zone-whiff-rate-mike-trout-pre--vs.-post-statcast-mvp",
+    "title": "Interactive Comparison: Strikeouts vs. Hard-Hit Rate",
+    "section": "Strike Zone Whiff Rate: Mike Trout (Pre- vs. Post-Statcast MVP)",
+    "text": "Strike Zone Whiff Rate: Mike Trout (Pre- vs. Post-Statcast MVP)\nThe evolution between Mike Trout’s 2014 and 2019 strike zones illustrates how tracking technology created a data-driven arms race between hitters and pitchers. In the early Statcast era, teams utilized high-speed optical cameras and radar to measure pitch spin rates and induced vertical break, discovering that elevated fastballs were uniquely effective at generating whiffs against modern uppercut swing paths. Concurrently, hitters used granular pitch-tracking feedback and video analytics to eliminate swing inefficiencies, allowing Trout to virtually master the middle of the plate—his whiff rate in the heart of the zone dropped from 12.2% in 2014 down to just 4.9% in 2019. In response, pitchers adjusted their scouting heat maps away from the center and attacked the upper quadrant with high-spin velocity, elevating his whiff rate at the top of the zone to 23.0%. This shift demonstrates the broader impact of Statcast: as tracking data helped elite hitters dominate hittable pitches, pitchers adapted by targeting the extreme vertical boundaries of the strike zone.\n\n\n\n\n\n\n\n\n\nBetween 2014 and 2019, Trout virtually eliminated whiffs in the heart of the zone—dropping from a 12.2% whiff rate down to 4.9%. Concurrently, pitchers shifted to attacking him with high fastballs, where his swing-and-miss rate increased to 23% in the upper-inside quadrant."
   }
 ]

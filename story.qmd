@@ -1,0 +1,96 @@
+---
+title: "Story"
+execute:
+  echo: false
+  warning: false
+---
+
+```{r}
+#| message: false
+library(tidyverse)
+library(plotly)
+
+# Load player-season datasets to calculate annual averages
+hitters_hard_hit <- read_csv("data/all_hitters_hard_hit.csv")
+pitcher_seasons <- read_csv("data/pitcher_seasons.csv")
+
+yearly_hh <- hitters_hard_hit |>
+  group_by(year) |>
+  summarize(avg_hard_hit = round(mean(hard_hit_pct, na.rm = TRUE), 1))
+
+yearly_k9 <- pitcher_seasons |>
+  group_by(yearID) |>
+  summarize(avg_so9 = round(mean(so9), 2))
+
+combined_trajectory <- inner_join(yearly_hh, yearly_k9, by = c("year" = "yearID")) |>
+  mutate(era = if_else(year < 2015, "Pre-Statcast (2005–2014)", "Post-Statcast (2015–2025)"))
+```
+
+I have played baseball since I was young and am on the baseball team here at New College. As an athlete it is hard not to think about the statistical part of the game you are a part of, so naturally I was curious about how stats have changed over time in the biggest stage of baseball. I know that now more than ever, technology is a big part of sports, especially in MLB. On top of my curiosity, there has been discourse about this new technology in the baseball community. Many older, more traditional people around baseball do not see a need for technology. They played without it or coached without it, meaning they know they can be efficient without it. Younger, more statistical and analytical people around the game think the opposite, that if technology is not being used, you are missing out. I wanted to see how truly effective this technology was in terms of statistics. In my research, I found a website that lists the individual statistics for each player-season for the last 150 years or so (Lahman’s database). It allowed me to compare certain statistical categories that have improved over the last ten years and then relate them to the introduction of technology. I found that K/9 and Hard Hit % both increased dramatically after the introduction of technology into the game of baseball. This is important because it shows that the technology really has worked for most of the players in the big leagues, whether they were a hitter or pitcher. While there are obviously some outliers, there is an obvious increase in the averages of these stats over the two eras (PreStatCast and PostStatCast). We can see from these statistics that technology has had a positive impact on two very important stats in today’s game, showing that the younger and newer generation of baseball society is being supported by the numbers.
+
+## Game Evolution: Strikeout vs. Hard-Hit Trajectory
+
+Instead of tracking both metrics on a shared timeline, this **connected scatter plot (trajectory plot)** graphs them directly against each other. Tracing the path chronologically from 2005 (bottom left) to 2025 (top right) visualizes how Major League Baseball migrated diagonally upward—moving toward higher strikeout rates and higher exit velocities at the same time.
+
+```{r}
+#| label: plot-game-trajectory
+plot_ly(data = combined_trajectory, x = ~avg_so9, y = ~avg_hard_hit, height = 420) |>
+  # Chronological path connecting seasons
+  add_paths(
+    line = list(color = "#888888", width = 2, dash = "solid"),
+    showlegend = FALSE,
+    hoverinfo = "none"
+  ) |>
+  # Season marker points colored by era
+  add_markers(
+    color = ~era,
+    colors = c("Pre-Statcast (2005–2014)" = "#377eb8", "Post-Statcast (2015–2025)" = "#e41a1c"),
+    marker = list(size = 9, line = list(color = "black", width = 1)),
+    text = ~paste0("<b>Season: ", year, "</b><br>Era: ", era, "<br>Strikeouts per 9: ", avg_so9, "<br>Hard-Hit Rate: ", avg_hard_hit, "%"),
+    hoverinfo = "text"
+  ) |>
+  # Year labels for key seasons
+  add_text(
+    text = ~year,
+    textposition = "top center",
+    showlegend = FALSE,
+    textfont = list(size = 9, color = "#333333")
+  ) |>
+  layout(
+    title = list(
+      text = "<b>The Shift in Modern Baseball (2005–2025)</b><br><sup>League Average K/9 vs. Hard-Hit Rate Trajectory</sup>",
+      x = 0.5,
+      xanchor = "center",
+      font = list(size = 15)
+    ),
+    margin = list(t = 70, b = 60, l = 60, r = 50),
+    xaxis = list(
+      title = "League Average Strikeouts per 9 Innings (K/9)",
+      dtick = 0.5,
+      gridcolor = "#f0f0f0"
+    ),
+    yaxis = list(
+      title = "League Average Hard-Hit Rate (%)",
+      ticksuffix = "%",
+      gridcolor = "#f0f0f0"
+    ),
+    annotations = list(
+      list(
+        x = 6.55, y = 30.2,
+        text = "<b>2005 (Start)</b>",
+        showarrow = TRUE,
+        arrowhead = 2,
+        ax = -45, ay = 25
+      ),
+      list(
+        x = 8.61, y = 42.1,
+        text = "<b>2025 (Latest)</b>",
+        showarrow = TRUE,
+        arrowhead = 2,
+        ax = 45, ay = -25
+      )
+    ),
+    legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.18)
+  ) |>
+  config(responsive = TRUE)
+```

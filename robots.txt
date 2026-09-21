@@ -1,1 +1,1 @@
-Sitemap: https://SamBruce07.github.io/milestone-4/sitemap.xml
+Sitemap: https://SamBruce07.github.io/baseball-data/sitemap.xml
